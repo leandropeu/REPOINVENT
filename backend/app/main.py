@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,9 @@ from app.db import Base, engine, ensure_sqlite_schema
 from app.routers import auth, audit, equipment, reports, stats, units, users
 from app.security import is_secret_key_weak
 from app.settings import settings
+
+
+logger = logging.getLogger("repoinvent.security")
 
 
 def create_app() -> FastAPI:
@@ -52,6 +56,15 @@ def create_app() -> FastAPI:
                 "style-src 'self' 'unsafe-inline'; "
                 "script-src 'self'; "
                 "frame-ancestors 'none'"
+            )
+        code = int(response.status_code)
+        if code in (401, 403, 429) or code >= 500:
+            logger.warning(
+                "security_event status=%s method=%s path=%s ip=%s",
+                code,
+                request.method,
+                request.url.path,
+                (request.client.host if request.client else "unknown"),
             )
         return response
 

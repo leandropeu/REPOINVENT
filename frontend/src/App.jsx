@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -23,7 +23,7 @@ function Shell({ children, onLogout, user }) {
       <Sidebar />
       <main className="main">
         <div className="shell-actions">
-          {user ? <div className="muted">Usuário: {user.username}{user.is_admin ? " (admin)" : ""}</div> : null}
+          {user ? <div className="muted">UsuÃ¡rio: {user.username}{user.is_admin ? " (admin)" : ""}</div> : null}
           <div className="seg">
             {THEMES.map((t) => (
               <button
@@ -68,13 +68,13 @@ export default function App() {
       .catch(() => {
         clearToken();
         setMe(null);
-        setBootError("Sessão expirada, faça login novamente.");
+        setBootError("SessÃ£o expirada, faÃ§a login novamente.");
         navigate("/login");
       });
   }, [navigate]);
 
-  function onLogout() {
-    clearToken();
+  async function onLogout() {
+    await api.logout();
     navigate("/login");
   }
 
@@ -104,3 +104,4 @@ export default function App() {
     </Routes>
   );
 }
+

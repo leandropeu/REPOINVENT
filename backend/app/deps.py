@@ -16,14 +16,17 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         payload = decode_token(token)
         username = payload.get("sub")
+        token_type = payload.get("typ", "access")
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
+    if token_type != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     if not username:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalido")
     with get_session() as session:
         user = session.scalar(select(User).where(User.username == username))
         if not user or not user.is_active:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário inválido")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario invalido")
         return user
 
 

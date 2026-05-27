@@ -18,6 +18,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lockout_until: Mapped[Optional[dt.datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc))
 
 
@@ -78,3 +80,15 @@ class AuditEvent(Base):
     summary: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     before_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     after_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class SessionToken(Base):
+    __tablename__ = "session_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    token_type: Mapped[str] = mapped_column(String(16), index=True)  # refresh
+    jti_hash: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    expires_at: Mapped[dt.datetime] = mapped_column(DateTime, index=True)
+    revoked_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), index=True)

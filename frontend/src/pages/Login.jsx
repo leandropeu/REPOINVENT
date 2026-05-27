@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api.js";
-import { setToken } from "../api.js";
+import { setTokens } from "../api.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const { access_token } = await api.login(username, password);
-      setToken(access_token);
+      const { access_token, refresh_token } = await api.login(username, password);
+      setTokens(access_token, refresh_token);
       navigate("/app/dashboard");
     } catch (err) {
       setError(err.message || "Falha no login");
@@ -29,10 +29,10 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-title">Entrar</div>
-        <div className="login-sub">Acesse com usuário e senha</div>
+        <div className="login-sub">Acesse com usuÃ¡rio e senha</div>
         <form onSubmit={onSubmit} className="form">
           <label className="field">
-            <span>Usuário</span>
+            <span>UsuÃ¡rio</span>
             <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
           </label>
           <label className="field">
@@ -53,3 +53,4 @@ export default function Login() {
     </div>
   );
 }
+

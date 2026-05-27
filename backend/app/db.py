@@ -70,6 +70,30 @@ def ensure_sqlite_schema() -> None:
                 cur.execute("ALTER TABLE equipment ADD COLUMN operator TEXT NULL")
             if "contract" not in cols:
                 cur.execute("ALTER TABLE equipment ADD COLUMN contract TEXT NULL")
+        if "users" in tables:
+            user_cols = {r[1] for r in cur.execute("PRAGMA table_info(users)").fetchall()}
+            if "failed_login_attempts" not in user_cols:
+                cur.execute("ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0")
+            if "lockout_until" not in user_cols:
+                cur.execute("ALTER TABLE users ADD COLUMN lockout_until DATETIME NULL")
+        if "session_tokens" not in tables:
+            cur.execute(
+                """
+                CREATE TABLE session_tokens (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    token_type VARCHAR(16) NOT NULL,
+                    jti_hash VARCHAR(128) NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    revoked_at DATETIME NULL,
+                    created_at DATETIME NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                )
+                """
+            )
+            cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_session_tokens_jti_hash ON session_tokens(jti_hash)")
+            cur.execute("CREATE INDEX IF NOT EXISTS ix_session_tokens_user_id ON session_tokens(user_id)")
+            cur.execute("CREATE INDEX IF NOT EXISTS ix_session_tokens_expires_at ON session_tokens(expires_at)")
         con.commit()
     finally:
         con.close()

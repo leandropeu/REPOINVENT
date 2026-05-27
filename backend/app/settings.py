@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     secret_key: str
     access_token_expire_minutes: int = 120
+    refresh_token_expire_minutes: int = 60 * 24 * 7
     database_url: str = "sqlite:///./data/repoinvent.db"
     cors_origins: str = "http://127.0.0.1:5173"
     trusted_hosts: str = "127.0.0.1,localhost"
@@ -13,6 +14,8 @@ class Settings(BaseSettings):
     force_https: bool = False
     login_rate_limit_max_attempts: int = 10
     login_rate_limit_window_seconds: int = 300
+    login_lockout_threshold: int = 5
+    login_lockout_minutes: int = 15
     min_secret_key_length: int = 32
     enforce_strong_secret_key: bool = False
 

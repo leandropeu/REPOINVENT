@@ -6,12 +6,11 @@ import Equipamentos from "./pages/Equipamentos.jsx";
 import Unidades from "./pages/Unidades.jsx";
 import Usuarios from "./pages/Usuarios.jsx";
 import Auditoria from "./pages/Auditoria.jsx";
-import Relatorios from "./pages/Relatorios.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import { api, clearToken, getToken } from "./api.js";
 import { getTheme, setTheme, THEMES } from "./theme.js";
 
-function Shell({ children, onLogout }) {
+function Shell({ children, onLogout, user }) {
   const [theme, setThemeState] = useState(getTheme());
 
   function onSetTheme(t) {
@@ -24,6 +23,7 @@ function Shell({ children, onLogout }) {
       <Sidebar />
       <main className="main">
         <div className="shell-actions">
+          {user ? <div className="muted">Usuário: {user.username}{user.is_admin ? " (admin)" : ""}</div> : null}
           <div className="seg">
             {THEMES.map((t) => (
               <button
@@ -57,14 +57,17 @@ function RequireAuth({ children }) {
 export default function App() {
   const navigate = useNavigate();
   const [bootError, setBootError] = useState("");
+  const [me, setMe] = useState(null);
 
   useEffect(() => {
     const token = getToken();
     if (!token) return;
     api
       .me()
+      .then((u) => setMe(u))
       .catch(() => {
         clearToken();
+        setMe(null);
         setBootError("Sessão expirada, faça login novamente.");
         navigate("/login");
       });
@@ -83,15 +86,14 @@ export default function App() {
         path="/app/*"
         element={
           <RequireAuth>
-            <Shell onLogout={onLogout}>
+            <Shell onLogout={onLogout} user={me}>
               {bootError ? <div className="alert alert-error">{bootError}</div> : null}
               <Routes>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="equipamentos" element={<Equipamentos />} />
-                <Route path="unidades" element={<Unidades />} />
-                <Route path="usuarios" element={<Usuarios />} />
-                <Route path="auditoria" element={<Auditoria />} />
-                <Route path="relatorios" element={<Relatorios />} />
+                <Route path="dashboard" element={<Dashboard me={me} />} />
+                <Route path="equipamentos" element={<Equipamentos me={me} />} />
+                <Route path="unidades" element={<Unidades me={me} />} />
+                <Route path="usuarios" element={<Usuarios me={me} />} />
+                <Route path="auditoria" element={<Auditoria me={me} />} />
                 <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
               </Routes>
             </Shell>

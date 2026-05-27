@@ -1,5 +1,16 @@
 const API_BASE = "http://127.0.0.1:8010";
 
+function buildQuery(params = {}) {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v === undefined || v === null) return;
+    if (typeof v === "string" && v.trim() === "") return;
+    qs.set(k, String(v));
+  });
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+
 export function getToken() {
   return localStorage.getItem("access_token");
 }
@@ -82,8 +93,7 @@ export const api = {
     return request("/stats");
   },
   units(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/units${qs ? `?${qs}` : ""}`);
+    return request(`/units${buildQuery(params)}`);
   },
   createUnit(payload) {
     return request("/units", { method: "POST", body: payload });
@@ -95,8 +105,7 @@ export const api = {
     return request(`/units/${id}`, { method: "DELETE" });
   },
   equipment(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/equipment${qs ? `?${qs}` : ""}`);
+    return request(`/equipment${buildQuery(params)}`);
   },
   createEquipment(payload) {
     return request("/equipment", { method: "POST", body: payload });
@@ -108,8 +117,7 @@ export const api = {
     return request(`/equipment/${id}`, { method: "DELETE" });
   },
   users(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/users${qs ? `?${qs}` : ""}`);
+    return request(`/users${buildQuery(params)}`);
   },
   createUser(payload) {
     return request("/users", { method: "POST", body: payload });
@@ -121,8 +129,7 @@ export const api = {
     return request(`/users/${id}`, { method: "DELETE" });
   },
   audit(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/audit${qs ? `?${qs}` : ""}`);
+    return request(`/audit${buildQuery(params)}`);
   },
   reportUrl(path) {
     const token = getToken();

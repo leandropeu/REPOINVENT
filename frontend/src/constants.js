@@ -7,9 +7,10 @@ export const EQUIPMENT_TYPES = [
   "AP",
   "IMPRESSORA",
   "ROUTER",
+  "SWITCH",
   "CATRACA",
   "FACIAL",
+  "SOM",
   "TABLET",
   "OUTROS"
 ];
-

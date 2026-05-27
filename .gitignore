@@ -21,4 +21,4 @@ dist/
 Thumbs.db
 .idea/
 .vscode/
-
+.supernova_ref/

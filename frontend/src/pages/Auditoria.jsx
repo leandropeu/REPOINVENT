@@ -3,7 +3,7 @@ import Topbar from "../components/Topbar.jsx";
 import Modal from "../components/Modal.jsx";
 import { api } from "../api.js";
 
-export default function Auditoria() {
+export default function Auditoria({ me }) {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [entity, setEntity] = useState("");

@@ -5,7 +5,7 @@ import { api } from "../api.js";
 
 const emptyForm = { name: "", external_id: "", cnpj: "", address: "" };
 
-export default function Unidades() {
+export default function Unidades({ me }) {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
@@ -41,6 +41,7 @@ export default function Unidades() {
   }
 
   function openEdit(u) {
+    if (!me?.is_admin) return;
     setEditing(u);
     setForm({
       name: u.name || "",
@@ -132,9 +133,13 @@ export default function Unidades() {
                 {u.address || "-"}
               </div>
               <div className="actions">
-                <button className="btn btn-xs" onClick={() => openEdit(u)}>
-                  Editar
-                </button>
+                {me?.is_admin ? (
+                  <button className="btn btn-xs" onClick={() => openEdit(u)}>
+                    Editar
+                  </button>
+                ) : (
+                  <span className="muted">Somente consulta</span>
+                )}
               </div>
             </div>
           ))}

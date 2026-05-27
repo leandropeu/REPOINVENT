@@ -25,9 +25,6 @@ export default function Sidebar() {
         <NavLink className={linkClass} to="/app/auditoria">
           Auditoria
         </NavLink>
-        <NavLink className={linkClass} to="/app/relatorios">
-          Relatórios
-        </NavLink>
       </nav>
     </aside>
   );

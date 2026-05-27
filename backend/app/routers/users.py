@@ -17,10 +17,11 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("", response_model=list[UserOut])
 def list_users(
     q: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=500, ge=1, le=5000),
     _: object = Depends(require_admin),
 ):
     with get_session() as session:
-        stmt = select(User).order_by(User.created_at.desc())
+        stmt = select(User).order_by(User.created_at.desc()).limit(limit)
         if q:
             stmt = stmt.where(User.name.ilike(f"%{q}%") | User.username.ilike(f"%{q}%"))
         items = session.scalars(stmt).all()

@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -49,6 +49,8 @@ class Equipment(Base):
     serial: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     imei: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     phone_number: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    warranty: Mapped[bool] = mapped_column(Boolean, default=False)
+    warranty_expires_at: Mapped[Optional[dt.date]] = mapped_column(Date, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc))
     updated_at: Mapped[dt.datetime] = mapped_column(

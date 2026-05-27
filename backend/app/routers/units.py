@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 
 from app.db import get_session
-from app.deps import get_current_user
+from app.deps import get_current_user, require_admin
 from app.models import Unit
 from app.schemas import UnitCreate, UnitOut, UnitUpdate
 from app.audit import log_event
@@ -74,7 +74,7 @@ def create_unit(payload: UnitCreate, request: Request, user=Depends(get_current_
 
 
 @router.put("/{unit_id}", response_model=UnitOut)
-def update_unit(unit_id: int, payload: UnitUpdate, request: Request, user=Depends(get_current_user)):
+def update_unit(unit_id: int, payload: UnitUpdate, request: Request, user=Depends(require_admin)):
     with get_session() as session:
         unit = session.get(Unit, unit_id)
         if not unit:
@@ -118,7 +118,7 @@ def update_unit(unit_id: int, payload: UnitUpdate, request: Request, user=Depend
 
 
 @router.delete("/{unit_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_unit(unit_id: int, request: Request, user=Depends(get_current_user)):
+def delete_unit(unit_id: int, request: Request, user=Depends(require_admin)):
     with get_session() as session:
         unit = session.get(Unit, unit_id)
         if not unit:

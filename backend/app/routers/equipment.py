@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 
 from app.db import get_session
-from app.deps import get_current_user
+from app.deps import get_current_user, require_admin
 from app.models import Equipment, Unit
 from app.schemas import EquipmentCreate, EquipmentOut, EquipmentUpdate
 from app.audit import log_event
@@ -18,10 +18,11 @@ def list_equipment(
     q: str | None = Query(default=None, max_length=120),
     unit_id: int | None = None,
     type: str | None = None,
+    limit: int = Query(default=500, ge=1, le=5000),
     _: object = Depends(get_current_user),
 ):
     with get_session() as session:
-        stmt = select(Equipment).order_by(Equipment.updated_at.desc())
+        stmt = select(Equipment).order_by(Equipment.updated_at.desc()).limit(limit)
         if q:
             like = f"%{q}%"
             stmt = stmt.where(
@@ -48,6 +49,8 @@ def list_equipment(
                 serial=e.serial,
                 imei=e.imei,
                 phone_number=e.phone_number,
+                warranty=e.warranty,
+                warranty_expires_at=e.warranty_expires_at,
                 notes=e.notes,
                 created_at=e.created_at,
                 updated_at=e.updated_at,
@@ -62,6 +65,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
         unit = session.get(Unit, payload.unit_id)
         if not unit:
             raise HTTPException(status_code=400, detail="Unidade inválida")
+        if payload.warranty_expires_at and not payload.warranty:
+            raise HTTPException(status_code=400, detail="Não é possível definir vencimento sem garantia")
         item = Equipment(
             unit_id=payload.unit_id,
             type=payload.type.strip().upper(),
@@ -71,6 +76,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
             serial=(payload.serial.strip() if payload.serial else None),
             imei=(payload.imei.strip() if payload.imei else None),
             phone_number=(payload.phone_number.strip() if payload.phone_number else None),
+            warranty=bool(payload.warranty),
+            warranty_expires_at=(payload.warranty_expires_at if payload.warranty else None),
             notes=(payload.notes.strip() if payload.notes else None),
         )
         session.add(item)
@@ -98,6 +105,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
                 "serial": item.serial,
                 "imei": item.imei,
                 "phone_number": item.phone_number,
+                "warranty": item.warranty,
+                "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
                 "notes": item.notes,
             },
         )
@@ -112,6 +121,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
             serial=item.serial,
             imei=item.imei,
             phone_number=item.phone_number,
+            warranty=item.warranty,
+            warranty_expires_at=item.warranty_expires_at,
             notes=item.notes,
             created_at=item.created_at,
             updated_at=item.updated_at,
@@ -119,7 +130,7 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
 
 
 @router.put("/{equipment_id}", response_model=EquipmentOut)
-def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Request, user=Depends(get_current_user)):
+def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Request, user=Depends(require_admin)):
     with get_session() as session:
         item = session.get(Equipment, equipment_id)
         if not item:
@@ -134,6 +145,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "warranty": item.warranty,
+            "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,
         }
         if payload.unit_id is not None:
@@ -155,6 +168,14 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             item.imei = payload.imei.strip() if payload.imei else None
         if payload.phone_number is not None:
             item.phone_number = payload.phone_number.strip() if payload.phone_number else None
+        if payload.warranty is not None:
+            item.warranty = bool(payload.warranty)
+            if not item.warranty:
+                item.warranty_expires_at = None
+        if payload.warranty_expires_at is not None:
+            if not item.warranty:
+                raise HTTPException(status_code=400, detail="Não é possível definir vencimento sem garantia")
+            item.warranty_expires_at = payload.warranty_expires_at
         if payload.notes is not None:
             item.notes = payload.notes.strip() if payload.notes else None
         try:
@@ -173,6 +194,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "warranty": item.warranty,
+            "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,
         }
         log_event(
@@ -197,6 +220,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             serial=item.serial,
             imei=item.imei,
             phone_number=item.phone_number,
+            warranty=item.warranty,
+            warranty_expires_at=item.warranty_expires_at,
             notes=item.notes,
             created_at=item.created_at,
             updated_at=item.updated_at,
@@ -204,7 +229,7 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
 
 
 @router.delete("/{equipment_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_equipment(equipment_id: int, request: Request, user=Depends(get_current_user)):
+def delete_equipment(equipment_id: int, request: Request, user=Depends(require_admin)):
     with get_session() as session:
         item = session.get(Equipment, equipment_id)
         if not item:
@@ -219,6 +244,8 @@ def delete_equipment(equipment_id: int, request: Request, user=Depends(get_curre
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "warranty": item.warranty,
+            "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,
         }
         session.delete(item)

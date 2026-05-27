@@ -5,8 +5,9 @@ import { api } from "../api.js";
 
 const emptyForm = { name: "", username: "", password: "", is_admin: false, is_active: true };
 
-export default function Usuarios() {
+export default function Usuarios({ me }) {
   const [items, setItems] = useState([]);
+  const [recent, setRecent] = useState([]);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,8 +20,9 @@ export default function Usuarios() {
     setError("");
     setLoading(true);
     try {
-      const data = await api.users({ q: q || undefined });
-      setItems(data);
+      const [list, r] = await Promise.all([api.users({ q: q || undefined }), api.users({ limit: 10 })]);
+      setItems(list);
+      setRecent(r);
     } catch (err) {
       setError(err.message || "Erro (somente admin)");
     } finally {
@@ -34,12 +36,17 @@ export default function Usuarios() {
   }, []);
 
   function openNew() {
+    if (!me?.is_admin) {
+      setError("Apenas admin pode gerenciar usuários.");
+      return;
+    }
     setEditing(null);
     setForm(emptyForm);
     setOpen(true);
   }
 
   function openEdit(u) {
+    if (!me?.is_admin) return;
     setEditing(u);
     setForm({
       name: u.name || "",
@@ -78,6 +85,7 @@ export default function Usuarios() {
   }
 
   async function onRemove(u) {
+    if (!me?.is_admin) return;
     if (!confirm(`Remover usuário "${u.username}"?`)) return;
     setError("");
     try {
@@ -128,12 +136,18 @@ export default function Usuarios() {
               <div>{u.is_admin ? "Sim" : "Não"}</div>
               <div>{u.is_active ? "Sim" : "Não"}</div>
               <div className="actions">
-                <button className="btn btn-xs" onClick={() => openEdit(u)}>
-                  Editar
-                </button>
-                <button className="btn btn-xs btn-danger" onClick={() => onRemove(u)}>
-                  Remover
-                </button>
+                {me?.is_admin ? (
+                  <>
+                    <button className="btn btn-xs" onClick={() => openEdit(u)}>
+                      Editar
+                    </button>
+                    <button className="btn btn-xs btn-danger" onClick={() => onRemove(u)}>
+                      Remover
+                    </button>
+                  </>
+                ) : (
+                  <span className="muted">Sem permissão</span>
+                )}
               </div>
             </div>
           ))}
@@ -141,7 +155,40 @@ export default function Usuarios() {
         </div>
       </div>
 
-      <Modal open={open} title={editing ? "Editar usuário" : "Novo usuário"} onClose={() => (saving ? null : setOpen(false))}>
+      <div className="card">
+        <div className="card-title">Usuários inseridos recentemente</div>
+        <div className="table table-recent-users">
+          <div className="tr th">
+            <div>Data</div>
+            <div>Nome</div>
+            <div>Usuário</div>
+            <div>Admin</div>
+            <div>Ativo</div>
+          </div>
+          {recent.map((u) => (
+            <div key={`r-${u.id}`} className="tr">
+              <div className="truncate" title={u.created_at}>
+                {new Date(u.created_at).toLocaleString()}
+              </div>
+              <div className="truncate" title={u.name}>
+                {u.name}
+              </div>
+              <div className="truncate" title={u.username}>
+                {u.username}
+              </div>
+              <div>{u.is_admin ? "Sim" : "Não"}</div>
+              <div>{u.is_active ? "Sim" : "Não"}</div>
+            </div>
+          ))}
+          {!recent.length ? <div className="empty">{loading ? "Carregando..." : "Sem registros recentes."}</div> : null}
+        </div>
+      </div>
+
+      <Modal
+        open={open}
+        title={editing ? "Editar usuário" : "Novo usuário"}
+        onClose={() => (saving ? null : setOpen(false))}
+      >
         <form className="form" onSubmit={onSave}>
           <label className="field">
             <span>Nome</span>

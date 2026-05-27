@@ -4,7 +4,22 @@ import StatCard from "../components/StatCard.jsx";
 import { api } from "../api.js";
 import { EQUIPMENT_TYPES } from "../constants.js";
 
-export default function Dashboard() {
+function download(path, filename) {
+  const { url, token } = api.reportUrl(path);
+  fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    .then(async (res) => {
+      if (!res.ok) throw new Error((await res.text()) || "Erro");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((e) => alert(e.message || "Erro"));
+}
+
+export default function Dashboard({ me }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
 
@@ -41,7 +56,26 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      <div className="card">
+        <div className="card-title">Relatórios</div>
+        <div className="row row-wrap">
+          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/units.csv", "units.csv")}>
+            Unidades
+          </button>
+          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/equipment.csv", "equipment.csv")}>
+            Equipamentos
+          </button>
+          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/users.csv", "users.csv")}>
+            Usuários
+          </button>
+          <button className="btn btn-sm" onClick={() => download("/reports/audit.csv", "audit.csv")}>
+            Auditoria
+          </button>
+        </div>
+        {!me?.is_admin ? <div className="hint">Observação: exports exigem permissão de admin.</div> : null}
+        <div className="hint">Dica: exports usam sua sessão (token). Se der 401, faça login novamente.</div>
+      </div>
     </div>
   );
 }
-

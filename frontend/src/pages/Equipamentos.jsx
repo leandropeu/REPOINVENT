@@ -13,6 +13,8 @@ const emptyForm = {
   serial: "",
   imei: "",
   phone_number: "",
+  warranty: false,
+  warranty_expires_at: "",
   notes: ""
 };
 
@@ -26,17 +28,21 @@ function normalizePayload(form) {
     serial: form.serial || null,
     imei: form.imei || null,
     phone_number: form.phone_number || null,
+    warranty: Boolean(form.warranty),
+    warranty_expires_at: form.warranty ? form.warranty_expires_at || null : null,
     notes: form.notes || null
   };
   if (form.type !== "MOBILE") {
     payload.imei = null;
     payload.phone_number = null;
   }
+  if (!payload.warranty) payload.warranty_expires_at = null;
   return payload;
 }
 
-export default function Equipamentos() {
+export default function Equipamentos({ me }) {
   const [items, setItems] = useState([]);
+  const [recent, setRecent] = useState([]);
   const [units, setUnits] = useState([]);
   const [q, setQ] = useState("");
   const [unitId, setUnitId] = useState("");
@@ -52,12 +58,14 @@ export default function Equipamentos() {
     setError("");
     setLoading(true);
     try {
-      const [u, e] = await Promise.all([
+      const [u, e, r] = await Promise.all([
         api.units(),
-        api.equipment({ q: q || undefined, unit_id: unitId || undefined, type: type || undefined })
+        api.equipment({ q: q || undefined, unit_id: unitId || undefined, type: type || undefined }),
+        api.equipment({ limit: 10 })
       ]);
       setUnits(u);
       setItems(e);
+      setRecent(r);
     } catch (err) {
       setError(err.message || "Erro");
     } finally {
@@ -83,6 +91,7 @@ export default function Equipamentos() {
   }
 
   function openEdit(item) {
+    if (!me?.is_admin) return;
     setEditing(item);
     setForm({
       unit_id: String(item.unit_id),
@@ -93,6 +102,8 @@ export default function Equipamentos() {
       serial: item.serial || "",
       imei: item.imei || "",
       phone_number: item.phone_number || "",
+      warranty: Boolean(item.warranty),
+      warranty_expires_at: item.warranty_expires_at || "",
       notes: item.notes || ""
     });
     setOpen(true);
@@ -106,6 +117,7 @@ export default function Equipamentos() {
       const payload = normalizePayload(form);
       if (!payload.unit_id) throw new Error("Selecione uma unidade");
       if (!payload.name?.trim()) throw new Error("Informe um nome");
+      if (payload.warranty && !payload.warranty_expires_at) throw new Error("Informe o vencimento da garantia");
       if (editing) await api.updateEquipment(editing.id, payload);
       else await api.createEquipment(payload);
       setOpen(false);
@@ -190,16 +202,51 @@ export default function Equipamentos() {
               <div>{it.asset_tag || "-"}</div>
               <div>{it.serial || "-"}</div>
               <div className="actions">
-                <button className="btn btn-xs" onClick={() => openEdit(it)}>
-                  Editar
-                </button>
-                <button className="btn btn-xs btn-danger" onClick={() => onRemove(it)}>
-                  Remover
-                </button>
+                {me?.is_admin ? (
+                  <>
+                    <button className="btn btn-xs" onClick={() => openEdit(it)}>
+                      Editar
+                    </button>
+                    <button className="btn btn-xs btn-danger" onClick={() => onRemove(it)}>
+                      Remover
+                    </button>
+                  </>
+                ) : (
+                  <span className="muted">Somente consulta</span>
+                )}
               </div>
             </div>
           ))}
           {!items.length ? <div className="empty">{loading ? "Carregando..." : "Nenhum equipamento."}</div> : null}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Equipamentos inseridos recentemente</div>
+        <div className="table table-recent">
+          <div className="tr th">
+            <div>Data</div>
+            <div>Unidade</div>
+            <div>Tipo</div>
+            <div>Nome</div>
+            <div>Patrimônio</div>
+          </div>
+          {recent.map((it) => (
+            <div key={`r-${it.id}`} className="tr">
+              <div className="truncate" title={it.created_at}>
+                {new Date(it.created_at).toLocaleString()}
+              </div>
+              <div className="truncate" title={String(unitNameById[it.unit_id] ?? it.unit_id)}>
+                {unitNameById[it.unit_id] ?? it.unit_id}
+              </div>
+              <div>{it.type}</div>
+              <div className="truncate" title={it.name}>
+                {it.name}
+              </div>
+              <div>{it.asset_tag || "-"}</div>
+            </div>
+          ))}
+          {!recent.length ? <div className="empty">{loading ? "Carregando..." : "Sem registros recentes."}</div> : null}
         </div>
       </div>
 
@@ -277,15 +324,44 @@ export default function Equipamentos() {
             </div>
           ) : null}
 
+          <div className="grid grid-2">
+            <label className="field">
+              <span>Garantia</span>
+              <select
+                value={form.warranty ? "1" : "0"}
+                onChange={(e) => {
+                  const enabled = e.target.value === "1";
+                  setForm((f) => ({
+                    ...f,
+                    warranty: enabled,
+                    warranty_expires_at: enabled ? f.warranty_expires_at : ""
+                  }));
+                }}
+              >
+                <option value="0">Não</option>
+                <option value="1">Sim</option>
+              </select>
+            </label>
+            {form.warranty ? (
+              <label className="field">
+                <span>Vencimento</span>
+                <input
+                  type="date"
+                  value={form.warranty_expires_at}
+                  onChange={(e) => setForm((f) => ({ ...f, warranty_expires_at: e.target.value }))}
+                />
+              </label>
+            ) : (
+              <div />
+            )}
+          </div>
+
           <label className="field">
             <span>Observações</span>
             <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </label>
 
           <div className="row row-right">
-            <button className="btn btn-sm" type="button" onClick={() => setOpen(false)} disabled={saving}>
-              Cancelar
-            </button>
             <button className="btn btn-sm btn-primary" disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>

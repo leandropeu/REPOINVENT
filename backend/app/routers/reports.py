@@ -226,6 +226,31 @@ def export_generic(
         return _dispatch_export(resource=resource, fmt=fmt, rows=rows)
 
 
+# Starlette/FastAPI path params are greedy; the pattern `/{resource}.{fmt}` may not match as expected.
+# Provide an explicit non-ambiguous alternative route.
+@router.get("/{resource}/export/{fmt}")
+def export_generic_alt(
+    resource: str,
+    fmt: str,
+    limit: int = Query(default=2000, ge=1, le=10000),
+    _: object = Depends(require_admin),
+):
+    resource = resource.lower()
+    fmt = fmt.lower()
+    if resource not in {"units", "equipment", "users", "audit"}:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    with get_session() as session:
+        if resource == "units":
+            rows = _units_rows(session)
+        elif resource == "equipment":
+            rows = _equipment_rows(session)
+        elif resource == "users":
+            rows = _users_rows(session)
+        else:
+            rows = _audit_rows(session, limit=limit)
+        return _dispatch_export(resource=resource, fmt=fmt, rows=rows)
+
+
 @router.get("/units.csv")
 def units_csv(_: object = Depends(require_admin)):
     with get_session() as session:

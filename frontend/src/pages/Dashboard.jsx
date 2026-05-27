@@ -74,23 +74,26 @@ export default function Dashboard({ me }) {
         <div className="row row-wrap">
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/units.${reportFormat}`, `units.${reportFormat}`)}
+            onClick={() => download(`/reports/units/export/${reportFormat}`, `units.${reportFormat}`)}
           >
             Unidades
           </button>
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/equipment.${reportFormat}`, `equipment.${reportFormat}`)}
+            onClick={() => download(`/reports/equipment/export/${reportFormat}`, `equipment.${reportFormat}`)}
           >
             Equipamentos
           </button>
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/users.${reportFormat}`, `users.${reportFormat}`)}
+            onClick={() => download(`/reports/users/export/${reportFormat}`, `users.${reportFormat}`)}
           >
             Usuários
           </button>
-          <button className="btn btn-sm" onClick={() => download(`/reports/audit.${reportFormat}`, `audit.${reportFormat}`)}>
+          <button
+            className="btn btn-sm"
+            onClick={() => download(`/reports/audit/export/${reportFormat}`, `audit.${reportFormat}`)}
+          >
             Auditoria
           </button>
         </div>

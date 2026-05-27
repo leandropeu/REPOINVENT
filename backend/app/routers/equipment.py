@@ -69,21 +69,27 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
             raise HTTPException(status_code=400, detail="Unidade inválida")
         if payload.warranty_expires_at and not payload.warranty:
             raise HTTPException(status_code=400, detail="Não é possível definir vencimento sem garantia")
+
+        normalized_type = payload.type.strip().upper()
+        is_mobile = normalized_type == "MOBILE"
         item = Equipment(
             unit_id=payload.unit_id,
-            type=payload.type.strip().upper(),
+            type=normalized_type,
             name=payload.name.strip(),
             brand=(payload.brand.strip() if payload.brand else None),
             asset_tag=(payload.asset_tag.strip() if payload.asset_tag else None),
             serial=(payload.serial.strip() if payload.serial else None),
-            imei=(payload.imei.strip() if payload.imei else None),
-            phone_number=(payload.phone_number.strip() if payload.phone_number else None),
+            imei=(payload.imei.strip() if (payload.imei and is_mobile) else None),
+            phone_number=(payload.phone_number.strip() if (payload.phone_number and is_mobile) else None),
             operator=(payload.operator.strip() if payload.operator else None),
             contract=(payload.contract.strip() if payload.contract else None),
             warranty=bool(payload.warranty),
             warranty_expires_at=(payload.warranty_expires_at if payload.warranty else None),
             notes=(payload.notes.strip() if payload.notes else None),
         )
+        if not is_mobile:
+            item.operator = None
+            item.contract = None
         session.add(item)
         try:
             session.commit()
@@ -182,6 +188,12 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             item.operator = payload.operator.strip() if payload.operator else None
         if payload.contract is not None:
             item.contract = payload.contract.strip() if payload.contract else None
+
+        if item.type != "MOBILE":
+            item.imei = None
+            item.phone_number = None
+            item.operator = None
+            item.contract = None
         if payload.warranty is not None:
             item.warranty = bool(payload.warranty)
             if not item.warranty:

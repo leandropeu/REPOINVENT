@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Topbar from "../components/Topbar.jsx";
 import Modal from "../components/Modal.jsx";
 import { api } from "../api.js";
+import { maskCNPJ, unmaskCNPJ } from "../masks.js";
 
 const emptyForm = { name: "", external_id: "", cnpj: "", address: "" };
 
@@ -61,7 +62,7 @@ export default function Unidades({ me }) {
       const payload = {
         name: form.name,
         external_id: form.external_id || null,
-        cnpj: form.cnpj || null,
+        cnpj: form.cnpj ? unmaskCNPJ(form.cnpj) : null,
         address: form.address || null
       };
       if (editing) await api.updateUnit(editing.id, payload);
@@ -167,7 +168,13 @@ export default function Unidades({ me }) {
             </label>
             <label className="field">
               <span>CNPJ</span>
-              <input value={form.cnpj} onChange={(e) => setForm((f) => ({ ...f, cnpj: e.target.value }))} />
+              <input
+                value={form.cnpj}
+                inputMode="numeric"
+                maxLength={18}
+                placeholder="00.000.000/0000-00"
+                onChange={(e) => setForm((f) => ({ ...f, cnpj: maskCNPJ(e.target.value) }))}
+              />
             </label>
           </div>
           <label className="field">

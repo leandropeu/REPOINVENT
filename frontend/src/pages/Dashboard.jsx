@@ -48,6 +48,7 @@ export default function Dashboard({ me }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
   const [reportFormat, setReportFormat] = useState("csv");
+  const [tab, setTab] = useState("resumo");
 
   useEffect(() => {
     let mounted = true;
@@ -70,12 +71,38 @@ export default function Dashboard({ me }) {
     <div className="page">
       <Topbar title="Dashboard" />
       {error ? <div className="alert alert-error">{error}</div> : null}
+      <div className="card" style={{ padding: 10 }}>
+        <div className="seg">
+          <button
+            type="button"
+            className={`btn btn-xs ${tab === "resumo" ? "btn-primary" : ""}`}
+            onClick={() => setTab("resumo")}
+          >
+            Resumo
+          </button>
+          <button
+            type="button"
+            className={`btn btn-xs ${tab === "tipos" ? "btn-primary" : ""}`}
+            onClick={() => setTab("tipos")}
+          >
+            Tipos
+          </button>
+          <button
+            type="button"
+            className={`btn btn-xs ${tab === "relatorios" ? "btn-primary" : ""}`}
+            onClick={() => setTab("relatorios")}
+          >
+            Relatórios
+          </button>
+        </div>
+      </div>
       <div className="grid grid-3">
         <StatCard label="Equipamentos" value={stats?.total_equipment ?? "-"} />
         <StatCard label="Unidades (Evoque)" value={stats?.total_units ?? "-"} />
         <StatCard label="Tipos cadastrados" value={Object.keys(byType).length || "-"} />
       </div>
 
+      {tab === "resumo" ? (
       <div className="grid grid-2">
         <div className="card">
           <DonutChart title="Distribuição por tipo" data={chartData} />
@@ -84,6 +111,9 @@ export default function Dashboard({ me }) {
           <BarChart title="Top tipos" data={chartData} maxBars={12} />
         </div>
       </div>
+      ) : null}
+
+      {tab === "tipos" ? (
       <div className="card">
         <div className="card-title">Por tipo</div>
         <div className="chips">
@@ -95,7 +125,9 @@ export default function Dashboard({ me }) {
           ))}
         </div>
       </div>
+      ) : null}
 
+      {tab === "relatorios" ? (
       <div className="card">
         <div className="card-title">Relatórios</div>
         <div className="row row-wrap" style={{ marginBottom: 10 }}>
@@ -156,6 +188,7 @@ export default function Dashboard({ me }) {
         {!me?.is_admin ? <div className="hint">Observação: exports exigem permissão de admin.</div> : null}
         <div className="hint">Dica: exports usam sua sessão (token). Se der 401, faça login novamente.</div>
       </div>
+      ) : null}
     </div>
   );
 }

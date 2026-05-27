@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Topbar from "../components/Topbar.jsx";
 import StatCard from "../components/StatCard.jsx";
+import BarChart from "../components/BarChart.jsx";
+import DonutChart from "../components/DonutChart.jsx";
 import { api } from "../api.js";
 import { EQUIPMENT_TYPES } from "../constants.js";
 
@@ -36,6 +38,10 @@ export default function Dashboard({ me }) {
   }, []);
 
   const byType = useMemo(() => stats?.by_type ?? {}, [stats]);
+  const chartData = useMemo(
+    () => EQUIPMENT_TYPES.map((t) => ({ label: t, value: byType[t] ?? 0 })),
+    [byType]
+  );
 
   return (
     <div className="page">
@@ -45,6 +51,15 @@ export default function Dashboard({ me }) {
         <StatCard label="Equipamentos" value={stats?.total_equipment ?? "-"} />
         <StatCard label="Unidades (Evoque)" value={stats?.total_units ?? "-"} />
         <StatCard label="Tipos cadastrados" value={Object.keys(byType).length || "-"} />
+      </div>
+
+      <div className="grid grid-2">
+        <div className="card">
+          <DonutChart title="Distribuição por tipo" data={chartData} />
+        </div>
+        <div className="card">
+          <BarChart title="Top tipos" data={chartData} maxBars={12} />
+        </div>
       </div>
       <div className="card">
         <div className="card-title">Por tipo</div>

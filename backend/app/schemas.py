@@ -69,6 +69,8 @@ class EquipmentOut(BaseModel):
     serial: Optional[str] = None
     imei: Optional[str] = None
     phone_number: Optional[str] = None
+    operator: Optional[str] = None
+    contract: Optional[str] = None
     warranty: bool = False
     warranty_expires_at: Optional[dt.date] = None
     notes: Optional[str] = None
@@ -85,6 +87,8 @@ class EquipmentCreate(BaseModel):
     serial: Optional[str] = Field(default=None, max_length=120)
     imei: Optional[str] = Field(default=None, max_length=32)
     phone_number: Optional[str] = Field(default=None, max_length=32)
+    operator: Optional[str] = Field(default=None, max_length=80)
+    contract: Optional[str] = Field(default=None, max_length=120)
     warranty: bool = False
     warranty_expires_at: Optional[dt.date] = None
     notes: Optional[str] = None
@@ -99,6 +103,8 @@ class EquipmentUpdate(BaseModel):
     serial: Optional[str] = Field(default=None, max_length=120)
     imei: Optional[str] = Field(default=None, max_length=32)
     phone_number: Optional[str] = Field(default=None, max_length=32)
+    operator: Optional[str] = Field(default=None, max_length=80)
+    contract: Optional[str] = Field(default=None, max_length=120)
     warranty: Optional[bool] = None
     warranty_expires_at: Optional[dt.date] = None
     notes: Optional[str] = None

@@ -13,6 +13,8 @@ const emptyForm = {
   serial: "",
   imei: "",
   phone_number: "",
+  operator: "",
+  contract: "",
   warranty: false,
   warranty_expires_at: "",
   notes: ""
@@ -28,6 +30,8 @@ function normalizePayload(form) {
     serial: form.serial || null,
     imei: form.imei || null,
     phone_number: form.phone_number || null,
+    operator: form.operator || null,
+    contract: form.contract || null,
     warranty: Boolean(form.warranty),
     warranty_expires_at: form.warranty ? form.warranty_expires_at || null : null,
     notes: form.notes || null
@@ -35,6 +39,8 @@ function normalizePayload(form) {
   if (form.type !== "MOBILE") {
     payload.imei = null;
     payload.phone_number = null;
+    payload.operator = null;
+    payload.contract = null;
   }
   if (!payload.warranty) payload.warranty_expires_at = null;
   return payload;
@@ -102,6 +108,8 @@ export default function Equipamentos({ me }) {
       serial: item.serial || "",
       imei: item.imei || "",
       phone_number: item.phone_number || "",
+      operator: item.operator || "",
+      contract: item.contract || "",
       warranty: Boolean(item.warranty),
       warranty_expires_at: item.warranty_expires_at || "",
       notes: item.notes || ""
@@ -320,6 +328,14 @@ export default function Equipamentos({ me }) {
                   value={form.phone_number}
                   onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
                 />
+              </label>
+              <label className="field">
+                <span>Operadora</span>
+                <input value={form.operator} onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value }))} />
+              </label>
+              <label className="field">
+                <span>Contrato</span>
+                <input value={form.contract} onChange={(e) => setForm((f) => ({ ...f, contract: e.target.value }))} />
               </label>
             </div>
           ) : null}

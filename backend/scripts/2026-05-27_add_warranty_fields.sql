@@ -4,3 +4,5 @@
 
 ALTER TABLE equipment ADD COLUMN warranty INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE equipment ADD COLUMN warranty_expires_at DATE NULL;
+ALTER TABLE equipment ADD COLUMN operator TEXT NULL;
+ALTER TABLE equipment ADD COLUMN contract TEXT NULL;

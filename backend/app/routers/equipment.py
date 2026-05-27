@@ -49,6 +49,8 @@ def list_equipment(
                 serial=e.serial,
                 imei=e.imei,
                 phone_number=e.phone_number,
+                operator=getattr(e, "operator", None),
+                contract=getattr(e, "contract", None),
                 warranty=e.warranty,
                 warranty_expires_at=e.warranty_expires_at,
                 notes=e.notes,
@@ -76,6 +78,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
             serial=(payload.serial.strip() if payload.serial else None),
             imei=(payload.imei.strip() if payload.imei else None),
             phone_number=(payload.phone_number.strip() if payload.phone_number else None),
+            operator=(payload.operator.strip() if payload.operator else None),
+            contract=(payload.contract.strip() if payload.contract else None),
             warranty=bool(payload.warranty),
             warranty_expires_at=(payload.warranty_expires_at if payload.warranty else None),
             notes=(payload.notes.strip() if payload.notes else None),
@@ -105,6 +109,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
                 "serial": item.serial,
                 "imei": item.imei,
                 "phone_number": item.phone_number,
+                "operator": item.operator,
+                "contract": item.contract,
                 "warranty": item.warranty,
                 "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
                 "notes": item.notes,
@@ -121,6 +127,8 @@ def create_equipment(payload: EquipmentCreate, request: Request, user=Depends(ge
             serial=item.serial,
             imei=item.imei,
             phone_number=item.phone_number,
+            operator=item.operator,
+            contract=item.contract,
             warranty=item.warranty,
             warranty_expires_at=item.warranty_expires_at,
             notes=item.notes,
@@ -145,6 +153,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "operator": getattr(item, "operator", None),
+            "contract": getattr(item, "contract", None),
             "warranty": item.warranty,
             "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,
@@ -168,6 +178,10 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             item.imei = payload.imei.strip() if payload.imei else None
         if payload.phone_number is not None:
             item.phone_number = payload.phone_number.strip() if payload.phone_number else None
+        if payload.operator is not None:
+            item.operator = payload.operator.strip() if payload.operator else None
+        if payload.contract is not None:
+            item.contract = payload.contract.strip() if payload.contract else None
         if payload.warranty is not None:
             item.warranty = bool(payload.warranty)
             if not item.warranty:
@@ -194,6 +208,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "operator": getattr(item, "operator", None),
+            "contract": getattr(item, "contract", None),
             "warranty": item.warranty,
             "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,
@@ -220,6 +236,8 @@ def update_equipment(equipment_id: int, payload: EquipmentUpdate, request: Reque
             serial=item.serial,
             imei=item.imei,
             phone_number=item.phone_number,
+            operator=getattr(item, "operator", None),
+            contract=getattr(item, "contract", None),
             warranty=item.warranty,
             warranty_expires_at=item.warranty_expires_at,
             notes=item.notes,
@@ -244,6 +262,8 @@ def delete_equipment(equipment_id: int, request: Request, user=Depends(require_a
             "serial": item.serial,
             "imei": item.imei,
             "phone_number": item.phone_number,
+            "operator": getattr(item, "operator", None),
+            "contract": getattr(item, "contract", None),
             "warranty": item.warranty,
             "warranty_expires_at": str(item.warranty_expires_at) if item.warranty_expires_at else None,
             "notes": item.notes,

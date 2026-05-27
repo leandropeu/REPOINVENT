@@ -145,6 +145,8 @@ def _equipment_rows(session) -> list[dict]:
             "serial": e.serial or "",
             "imei": e.imei or "",
             "phone_number": e.phone_number or "",
+            "operator": getattr(e, "operator", "") or "",
+            "contract": getattr(e, "contract", "") or "",
             "warranty": int(bool(getattr(e, "warranty", False))),
             "warranty_expires_at": (getattr(e, "warranty_expires_at", None).isoformat() if getattr(e, "warranty_expires_at", None) else ""),
             "notes": (e.notes or "").replace("\n", " ").strip(),

@@ -49,6 +49,8 @@ class Equipment(Base):
     serial: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     imei: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     phone_number: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    operator: Mapped[Optional[str]] = mapped_column(String(80), nullable=True)
+    contract: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     warranty: Mapped[bool] = mapped_column(Boolean, default=False)
     warranty_expires_at: Mapped[Optional[dt.date]] = mapped_column(Date, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

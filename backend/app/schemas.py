@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TokenOut(BaseModel):
@@ -27,6 +28,14 @@ class UserCreate(BaseModel):
     is_admin: bool = False
     is_active: bool = True
 
+    @field_validator("username")
+    @classmethod
+    def normalize_username(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not re.fullmatch(r"[a-z0-9._-]{3,80}", value):
+            raise ValueError("Usuário inválido")
+        return value
+
 
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=120)
@@ -34,6 +43,16 @@ class UserUpdate(BaseModel):
     password: Optional[str] = Field(default=None, min_length=8, max_length=128)
     is_admin: Optional[bool] = None
     is_active: Optional[bool] = None
+
+    @field_validator("username")
+    @classmethod
+    def normalize_username_optional(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = value.strip().lower()
+        if not re.fullmatch(r"[a-z0-9._-]{3,80}", value):
+            raise ValueError("Usuário inválido")
+        return value
 
 
 class UnitOut(BaseModel):
@@ -51,12 +70,32 @@ class UnitCreate(BaseModel):
     cnpj: Optional[str] = Field(default=None, max_length=32)
     address: Optional[str] = Field(default=None, max_length=255)
 
+    @field_validator("cnpj")
+    @classmethod
+    def validate_cnpj(cls, value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) != 14:
+            raise ValueError("CNPJ deve ter 14 dígitos")
+        return digits
+
 
 class UnitUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=160)
     external_id: Optional[str] = Field(default=None, max_length=80)
     cnpj: Optional[str] = Field(default=None, max_length=32)
     address: Optional[str] = Field(default=None, max_length=255)
+
+    @field_validator("cnpj")
+    @classmethod
+    def validate_cnpj_optional(cls, value: Optional[str]) -> Optional[str]:
+        if value is None or value == "":
+            return None if value == "" else value
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) != 14:
+            raise ValueError("CNPJ deve ter 14 dígitos")
+        return digits
 
 
 class EquipmentOut(BaseModel):
@@ -93,6 +132,31 @@ class EquipmentCreate(BaseModel):
     warranty_expires_at: Optional[dt.date] = None
     notes: Optional[str] = None
 
+    @field_validator("type")
+    @classmethod
+    def normalize_type(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @field_validator("imei")
+    @classmethod
+    def validate_imei(cls, value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) not in (14, 15, 16):
+            raise ValueError("IMEI inválido")
+        return digits
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValueError("Telefone inválido")
+        return digits
+
 
 class EquipmentUpdate(BaseModel):
     unit_id: Optional[int] = None
@@ -108,6 +172,31 @@ class EquipmentUpdate(BaseModel):
     warranty: Optional[bool] = None
     warranty_expires_at: Optional[dt.date] = None
     notes: Optional[str] = None
+
+    @field_validator("type")
+    @classmethod
+    def normalize_type_optional(cls, value: Optional[str]) -> Optional[str]:
+        return value.strip().upper() if value is not None else value
+
+    @field_validator("imei")
+    @classmethod
+    def validate_imei_optional(cls, value: Optional[str]) -> Optional[str]:
+        if value is None or value == "":
+            return None if value == "" else value
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) not in (14, 15, 16):
+            raise ValueError("IMEI inválido")
+        return digits
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_optional(cls, value: Optional[str]) -> Optional[str]:
+        if value is None or value == "":
+            return None if value == "" else value
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValueError("Telefone inválido")
+        return digits
 
 
 class StatsOut(BaseModel):

@@ -10,6 +10,7 @@ function download(path, filename) {
   const { url, token } = api.reportUrl(path);
   fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     .then(async (res) => {
+      if (res.status === 401) throw new Error("Sessão expirada, faça login novamente.");
       if (!res.ok) throw new Error((await res.text()) || "Erro");
       const blob = await res.blob();
       const a = document.createElement("a");
@@ -19,6 +20,28 @@ function download(path, filename) {
       URL.revokeObjectURL(a.href);
     })
     .catch((e) => alert(e.message || "Erro"));
+}
+
+async function downloadReport({ resource, format, filename }) {
+  const candidates = [`/reports/${resource}/export/${format}`, `/reports/${resource}.${format}`, `/reports/${resource}.csv`];
+  const { token } = api.reportUrl("/reports/units.csv");
+
+  for (const path of candidates) {
+    const { url } = api.reportUrl(path);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 404) continue;
+    if (res.status === 401) throw new Error("Sessão expirada, faça login novamente.");
+    if (!res.ok) throw new Error((await res.text()) || "Erro");
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    return;
+  }
+
+  throw new Error("Relatório não encontrado no backend. Reinicie/atualize o backend.");
 }
 
 export default function Dashboard({ me }) {
@@ -89,25 +112,43 @@ export default function Dashboard({ me }) {
         <div className="row row-wrap">
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/units/export/${reportFormat}`, `units.${reportFormat}`)}
+            onClick={() =>
+              downloadReport({ resource: "units", format: reportFormat, filename: `units.${reportFormat}` }).catch((e) =>
+                alert(e.message || "Erro")
+              )
+            }
           >
             Unidades
           </button>
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/equipment/export/${reportFormat}`, `equipment.${reportFormat}`)}
+            onClick={() =>
+              downloadReport({
+                resource: "equipment",
+                format: reportFormat,
+                filename: `equipment.${reportFormat}`
+              }).catch((e) => alert(e.message || "Erro"))
+            }
           >
             Equipamentos
           </button>
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => download(`/reports/users/export/${reportFormat}`, `users.${reportFormat}`)}
+            onClick={() =>
+              downloadReport({ resource: "users", format: reportFormat, filename: `users.${reportFormat}` }).catch((e) =>
+                alert(e.message || "Erro")
+              )
+            }
           >
             Usuários
           </button>
           <button
             className="btn btn-sm"
-            onClick={() => download(`/reports/audit/export/${reportFormat}`, `audit.${reportFormat}`)}
+            onClick={() =>
+              downloadReport({ resource: "audit", format: reportFormat, filename: `audit.${reportFormat}` }).catch((e) =>
+                alert(e.message || "Erro")
+              )
+            }
           >
             Auditoria
           </button>

@@ -22,6 +22,7 @@ function download(path, filename) {
 export default function Dashboard({ me }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
+  const [reportFormat, setReportFormat] = useState("csv");
 
   useEffect(() => {
     let mounted = true;
@@ -59,17 +60,37 @@ export default function Dashboard({ me }) {
 
       <div className="card">
         <div className="card-title">Relatórios</div>
+        <div className="row row-wrap" style={{ marginBottom: 10 }}>
+          <div className="muted" style={{ alignSelf: "center" }}>
+            Formato:
+          </div>
+          <select className="input-sm" value={reportFormat} onChange={(e) => setReportFormat(e.target.value)}>
+            <option value="csv">CSV</option>
+            <option value="xlsx">Planilha (XLSX)</option>
+            <option value="xml">XML</option>
+            <option value="pdf">PDF</option>
+          </select>
+        </div>
         <div className="row row-wrap">
-          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/units.csv", "units.csv")}>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => download(`/reports/units.${reportFormat}`, `units.${reportFormat}`)}
+          >
             Unidades
           </button>
-          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/equipment.csv", "equipment.csv")}>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => download(`/reports/equipment.${reportFormat}`, `equipment.${reportFormat}`)}
+          >
             Equipamentos
           </button>
-          <button className="btn btn-sm btn-primary" onClick={() => download("/reports/users.csv", "users.csv")}>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => download(`/reports/users.${reportFormat}`, `users.${reportFormat}`)}
+          >
             Usuários
           </button>
-          <button className="btn btn-sm" onClick={() => download("/reports/audit.csv", "audit.csv")}>
+          <button className="btn btn-sm" onClick={() => download(`/reports/audit.${reportFormat}`, `audit.${reportFormat}`)}>
             Auditoria
           </button>
         </div>

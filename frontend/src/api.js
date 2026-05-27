@@ -1,0 +1,133 @@
+const API_BASE = "http://127.0.0.1:8010";
+
+export function getToken() {
+  return localStorage.getItem("access_token");
+}
+
+export function setToken(token) {
+  localStorage.setItem("access_token", token);
+}
+
+export function clearToken() {
+  localStorage.removeItem("access_token");
+}
+
+async function request(path, { method = "GET", body, auth = true } = {}) {
+  const headers = {};
+  if (auth) {
+    const token = getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+  if (body instanceof FormData) {
+    // browser sets boundary
+  } else if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearToken();
+      if (window.location.pathname !== "/login") window.location.assign("/login");
+      throw new Error("Sessão expirada, faça login novamente.");
+    }
+    let detail = "Erro";
+    try {
+      const data = await res.json();
+      if (typeof data?.detail === "string") detail = data.detail;
+      else if (Array.isArray(data?.detail) && data.detail[0]?.msg) detail = data.detail[0].msg;
+    } catch {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+export const api = {
+  async login(username, password) {
+    const body = new URLSearchParams();
+    body.set("username", username);
+    body.set("password", password);
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString()
+    });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error("Credenciais inválidas");
+      let detail = "Erro";
+      try {
+        const data = await res.json();
+        if (typeof data?.detail === "string") detail = data.detail;
+        else if (Array.isArray(data?.detail) && data.detail[0]?.msg) detail = data.detail[0].msg;
+      } catch {
+        // ignore
+      }
+      throw new Error(detail);
+    }
+    return res.json();
+  },
+  me() {
+    return request("/auth/me");
+  },
+  stats() {
+    return request("/stats");
+  },
+  units(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/units${qs ? `?${qs}` : ""}`);
+  },
+  createUnit(payload) {
+    return request("/units", { method: "POST", body: payload });
+  },
+  updateUnit(id, payload) {
+    return request(`/units/${id}`, { method: "PUT", body: payload });
+  },
+  deleteUnit(id) {
+    return request(`/units/${id}`, { method: "DELETE" });
+  },
+  equipment(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/equipment${qs ? `?${qs}` : ""}`);
+  },
+  createEquipment(payload) {
+    return request("/equipment", { method: "POST", body: payload });
+  },
+  updateEquipment(id, payload) {
+    return request(`/equipment/${id}`, { method: "PUT", body: payload });
+  },
+  deleteEquipment(id) {
+    return request(`/equipment/${id}`, { method: "DELETE" });
+  },
+  users(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/users${qs ? `?${qs}` : ""}`);
+  },
+  createUser(payload) {
+    return request("/users", { method: "POST", body: payload });
+  },
+  updateUser(id, payload) {
+    return request(`/users/${id}`, { method: "PUT", body: payload });
+  },
+  deleteUser(id) {
+    return request(`/users/${id}`, { method: "DELETE" });
+  },
+  audit(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/audit${qs ? `?${qs}` : ""}`);
+  },
+  reportUrl(path) {
+    const token = getToken();
+    if (!token) throw new Error("Sem token");
+    const url = new URL(`${API_BASE}${path}`);
+    return { url: url.toString(), token };
+  }
+};

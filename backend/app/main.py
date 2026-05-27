@@ -6,10 +6,13 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from fastapi import HTTPException
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from sqlalchemy.exc import OperationalError
 
 from app.db import Base, engine, ensure_sqlite_schema
+from app.instance_lock import InstanceLockError, acquire_instance_lock
 from app.routers import auth, audit, equipment, reports, stats, units, users
 from app.security import is_secret_key_weak
 from app.settings import settings
@@ -20,6 +23,11 @@ logger = logging.getLogger("repoinvent.security")
 
 def create_app() -> FastAPI:
     app = FastAPI(title="REPOINVENT API")
+    if settings.enforce_single_backend_instance:
+        try:
+            acquire_instance_lock(settings.instance_lock_file)
+        except InstanceLockError as e:
+            raise RuntimeError(str(e))
 
     if is_secret_key_weak(settings.secret_key, settings.min_secret_key_length):
         msg = f"SECRET_KEY fraca. Defina pelo menos {settings.min_secret_key_length} caracteres aleatórios."
@@ -41,7 +49,14 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
-        response: Response = await call_next(request)
+        try:
+            response: Response = await call_next(request)
+        except OperationalError as exc:
+            text = str(exc).lower()
+            if "database is locked" in text or "database table is locked" in text:
+                logger.warning("sqlite_locked path=%s method=%s", request.url.path, request.method)
+                raise HTTPException(status_code=503, detail="Banco ocupado. Tente novamente em instantes.")
+            raise
         if settings.secure_headers_enabled:
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"

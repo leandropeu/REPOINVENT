@@ -21,6 +21,9 @@ This project includes backend hardening controls. Keep these operational practic
 ## Backups
 - Keep scheduled backups and test restore monthly.
 - Store backups encrypted at rest and off-host.
+- Windows daily backup helper scripts:
+  - `backend/scripts/backup-diario.ps1`
+  - `backend/scripts/configurar-backup-diario.ps1`
 
 ## Dependency Hygiene
 - Update dependencies periodically (`pip list --outdated`, `npm outdated`).
@@ -29,3 +32,8 @@ This project includes backend hardening controls. Keep these operational practic
 ## Monitoring
 - Monitor spikes of HTTP `401`, `403`, `429` and `5xx`.
 - Alert on repeated login failures and suspicious report export bursts.
+- Monitor `503` responses with message `Banco ocupado` (SQLite lock contention).
+
+## SQLite Operational Guardrails
+- Keep only one backend instance active (`ENFORCE_SINGLE_BACKEND_INSTANCE=true`).
+- Avoid running multiple uvicorn workers against the same SQLite file.

@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 300
     login_lockout_threshold: int = 5
     login_lockout_minutes: int = 15
+    enforce_single_backend_instance: bool = True
+    instance_lock_file: str = "data/backend.instance.lock"
     min_secret_key_length: int = 32
     enforce_strong_secret_key: bool = False
 

@@ -47,6 +47,7 @@ export default function Auditoria({ me }) {
       />
       {error ? <div className="alert alert-error">{error}</div> : null}
 
+      <div className="page-scroll">
       <div className="card">
         <div className="filters">
           <input className="input-sm" placeholder="Buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
@@ -98,6 +99,7 @@ export default function Auditoria({ me }) {
           ))}
           {!items.length ? <div className="empty">{loading ? "Carregando..." : "Sem eventos."}</div> : null}
         </div>
+      </div>
       </div>
 
       <Modal open={!!selected} title="Detalhes do evento" onClose={() => setSelected(null)}>

@@ -3,6 +3,7 @@ import Topbar from "../components/Topbar.jsx";
 import StatCard from "../components/StatCard.jsx";
 import BarChart from "../components/BarChart.jsx";
 import DonutChart from "../components/DonutChart.jsx";
+import Tabs from "../components/Tabs.jsx";
 import { api } from "../api.js";
 import { EQUIPMENT_TYPES } from "../constants.js";
 

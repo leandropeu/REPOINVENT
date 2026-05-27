@@ -109,6 +109,8 @@ export default function Usuarios({ me }) {
 
       {error ? <div className="alert alert-error">{error}</div> : null}
 
+      <div className="page-scroll">
+
       <div className="card">
         <div className="filters filters-2">
           <input className="input-sm" placeholder="Buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
@@ -182,6 +184,8 @@ export default function Usuarios({ me }) {
           ))}
           {!recent.length ? <div className="empty">{loading ? "Carregando..." : "Sem registros recentes."}</div> : null}
         </div>
+      </div>
+
       </div>
 
       <Modal

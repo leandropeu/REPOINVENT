@@ -105,6 +105,7 @@ export default function Unidades({ me }) {
 
       {error ? <div className="alert alert-error">{error}</div> : null}
 
+      <div className="page-scroll">
       <div className="card">
         <div className="filters filters-2">
           <input className="input-sm" placeholder="Buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
@@ -146,6 +147,7 @@ export default function Unidades({ me }) {
           ))}
           {!items.length ? <div className="empty">{loading ? "Carregando..." : "Nenhuma unidade."}</div> : null}
         </div>
+      </div>
       </div>
 
       <Modal

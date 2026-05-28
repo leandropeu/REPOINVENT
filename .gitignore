@@ -4,12 +4,6 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-*.sqlite3
-*.db
-.env
-.venv/
-venv/
-ENV/
 
 # Node / React
 node_modules/

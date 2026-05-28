@@ -552,15 +552,18 @@ textarea:focus {
   gap: 10px;
 }
 .chart-top-tipos .bar-row {
-  grid-template-columns: 170px 1fr 52px;
+  grid-template-columns: 130px 1fr 52px;
   gap: 12px;
-}
-.chart-top-tipos .bar-track {
-  height: 14px;
 }
 .chart-top-tipos .bar-label,
 .chart-top-tipos .bar-value {
   font-size: 13px;
+}
+.dashboard-summary-grid {
+  grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.45fr);
+}
+.card-top-tipos {
+  min-width: 0;
 }
 .donut-wrap {
   position: relative;
@@ -621,6 +624,9 @@ textarea:focus {
     gap: 6px;
   }
   .chart-top-tipos .bar-row {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-summary-grid {
     grid-template-columns: 1fr;
   }
   .bar-value {

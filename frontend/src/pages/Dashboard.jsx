@@ -104,8 +104,8 @@ export default function Dashboard({ me }) {
       </div>
 
       {tab === "resumo" ? (
-      <div className="grid grid-2">
-        <div className="card">
+      <div className="grid grid-2 dashboard-summary-grid">
+        <div className="card card-top-tipos">
           <DonutChart title="Distribuição por tipo" data={chartData} />
         </div>
         <div className="card">

@@ -548,6 +548,20 @@ textarea:focus {
   font-weight: 800;
   color: rgba(0, 255, 255, 0.95);
 }
+.chart-top-tipos .bars {
+  gap: 10px;
+}
+.chart-top-tipos .bar-row {
+  grid-template-columns: 170px 1fr 52px;
+  gap: 12px;
+}
+.chart-top-tipos .bar-track {
+  height: 14px;
+}
+.chart-top-tipos .bar-label,
+.chart-top-tipos .bar-value {
+  font-size: 13px;
+}
 .donut-wrap {
   position: relative;
   width: 100%;
@@ -605,6 +619,9 @@ textarea:focus {
   .bar-row {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+  .chart-top-tipos .bar-row {
+    grid-template-columns: 1fr;
   }
   .bar-value {
     text-align: left;

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 
 const DEFAULT_COLORS = ["#00ffff", "#40c4ff", "#7c4dff", "#00e676", "#ffea00", "#ff6d00", "#ff1744"];
 
-export default function BarChart({ title, data = [], maxBars = 12, colors = DEFAULT_COLORS }) {
+export default function BarChart({ title, data = [], maxBars = 12, colors = DEFAULT_COLORS, className = "" }) {
   const rows = useMemo(() => {
     const sanitized = (Array.isArray(data) ? data : [])
       .filter((d) => d && typeof d.label === "string")
@@ -15,7 +15,7 @@ export default function BarChart({ title, data = [], maxBars = 12, colors = DEFA
   const max = useMemo(() => Math.max(1, ...rows.map((r) => r.value)), [rows]);
 
   return (
-    <div className="chart">
+    <div className={`chart ${className}`.trim()}>
       {title ? <div className="chart-title">{title}</div> : null}
       {!rows.length ? <div className="muted">Sem dados.</div> : null}
       <div className="bars">
@@ -38,4 +38,3 @@ export default function BarChart({ title, data = [], maxBars = 12, colors = DEFA
     </div>
   );
 }
-

@@ -109,7 +109,7 @@ export default function Dashboard({ me }) {
           <DonutChart title="Distribuição por tipo" data={chartData} />
         </div>
         <div className="card">
-          <BarChart title="Top tipos" data={chartData} maxBars={12} />
+          <BarChart title="Top tipos" data={chartData} maxBars={12} className="chart-top-tipos" />
         </div>
       </div>
       ) : null}

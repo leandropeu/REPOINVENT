@@ -33,6 +33,8 @@ This project includes backend hardening controls. Keep these operational practic
 - Monitor spikes of HTTP `401`, `403`, `429` and `5xx`.
 - Alert on repeated login failures and suspicious report export bursts.
 - Monitor `503` responses with message `Banco ocupado` (SQLite lock contention).
+- Use `backend/scripts/monitorar-db-lock.ps1` in Scheduler for lock alerts.
+- Run monthly checklist with `backend/scripts/healthcheck-mensal.ps1`.
 
 ## SQLite Operational Guardrails
 - Keep only one backend instance active (`ENFORCE_SINGLE_BACKEND_INSTANCE=true`).

@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import warnings
 import logging
+import warnings
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse, Response
+from sqlalchemy.exc import OperationalError
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
-from sqlalchemy.exc import OperationalError
 
 from app.db import Base, engine, ensure_sqlite_schema
 from app.instance_lock import InstanceLockError, acquire_instance_lock
@@ -17,17 +18,33 @@ from app.routers import auth, audit, equipment, reports, stats, units, users
 from app.security import is_secret_key_weak
 from app.settings import settings
 
-
 logger = logging.getLogger("repoinvent.security")
+
+
+def configure_security_logger() -> None:
+    logs_dir = Path(__file__).resolve().parents[1] / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    log_file = logs_dir / "security.log"
+
+    if any(isinstance(handler, RotatingFileHandler) for handler in logger.handlers):
+        return
+
+    logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=10, encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logger.addHandler(handler)
+    logger.propagate = False
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="REPOINVENT API")
+    configure_security_logger()
+
     if settings.enforce_single_backend_instance:
         try:
             acquire_instance_lock(settings.instance_lock_file)
-        except InstanceLockError as e:
-            raise RuntimeError(str(e))
+        except InstanceLockError as exc:
+            raise RuntimeError(str(exc))
 
     if is_secret_key_weak(settings.secret_key, settings.min_secret_key_length):
         msg = f"SECRET_KEY fraca. Defina pelo menos {settings.min_secret_key_length} caracteres aleatórios."
@@ -55,7 +72,7 @@ def create_app() -> FastAPI:
             text = str(exc).lower()
             if "database is locked" in text or "database table is locked" in text:
                 logger.warning("sqlite_locked path=%s method=%s", request.url.path, request.method)
-                raise HTTPException(status_code=503, detail="Banco ocupado. Tente novamente em instantes.")
+                return JSONResponse(status_code=503, content={"detail": "Banco ocupado. Tente novamente em instantes."})
             raise
         if settings.secure_headers_enabled:
             response.headers["X-Content-Type-Options"] = "nosniff"
@@ -72,11 +89,11 @@ def create_app() -> FastAPI:
                 "script-src 'self'; "
                 "frame-ancestors 'none'"
             )
-        code = int(response.status_code)
-        if code in (401, 403, 429) or code >= 500:
+        status_code = int(response.status_code)
+        if status_code in (401, 403, 429) or status_code >= 500:
             logger.warning(
                 "security_event status=%s method=%s path=%s ip=%s",
-                code,
+                status_code,
                 request.method,
                 request.url.path,
                 (request.client.host if request.client else "unknown"),
